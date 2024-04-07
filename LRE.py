@@ -3,10 +3,12 @@ import pandas as pd
 import numpy as np
 import cvxpy as cp
 import scipy as sp
+import subprocess as sbp
 
 from sklearn import manifold
 from sklearn.metrics import euclidean_distances
 
+from results import show_results
 
 def df_from_csv(path, n):
     df = pd.read_csv(path)
@@ -195,24 +197,19 @@ def save_matrix(matrix, filename):
         np.save(f, matrix)
         print(f'Saved file: {filename}')
 
-if __name__ == '__main__':
-    output_dir = 'output_070424_k2'
-    n = 1097
-    p = 2
-    k = 2
-    nullspace_iteration_limit = 10
-    df = df_from_csv('usa_city_distances/simplemaps_uscities_basicv1.78/uscities.csv', n)
 
+def run_LRE(df, n, p, k, nullspace_iteration_limit, output_dir):
+    if not os.path.isdir(output_dir):
+        cmd = f"mkdir {output_dir}"
+        log = sbp.run(cmd, stdout=sbp.PIPE, stderr=sbp.PIPE, shell=True, check=True)
 
     noise_dict = {0.0: 'no noise', 0.01: '1% noise', 0.1: '10% noise'}
-    m_dict = {0.0: 3, 0.01: 4, 0.1: 5}
-    target_dict = {0.0: 2, 0.01: 2, 0.1: 3}
-
+    m_dict = {0.0: 2, 0.01: 3, 0.1: 4}
+    target_dict = {0.0: 2, 0.01: 2, 0.1: 2}
 
     original_embedding = positions_from_df(df)
     save_matrix(original_embedding, os.path.join(output_dir, f'us_cities.npy'.replace(' ', '_')))
 
-    
     for noise_std in noise_dict.keys():
         print(f'% Running LRE using p={p}, n={n}, k={k}, noise std={noise_std}')
         label = noise_dict[noise_std]
@@ -232,4 +229,14 @@ if __name__ == '__main__':
         A = np.linalg.cholesky(nearestPD(low_rank_approximation(P, p)))[:, :p]
         r = (A.T @ phi_pos.T).T
         save_matrix(r, os.path.join(output_dir, f'r_{label}.npy'.replace(' ', '_')))
-        
+
+if __name__ == '__main__':
+    n = 1097
+    p = 2
+    nullspace_iteration_limit = 1
+    df = df_from_csv('usa_city_distances/simplemaps_uscities_basicv1.78/uscities.csv', n)
+
+    for k in reversed(range(18,19)):
+        output_dir = f'output_070424_k{k}'
+        run_LRE(df=df, n=n, p=p, k=k, nullspace_iteration_limit=nullspace_iteration_limit, output_dir=output_dir)
+        show_results(k, output_dir)

@@ -77,8 +77,8 @@ def plot_embeddings(us_cities, r_no_noise, r_1p_noise, r_10p_noise, filename, ma
     plt.savefig(filename)
     print(f'Saved image of LRE results: {filename}')
 
-if __name__ == '__main__':
-    k=2
+
+def show_results(k, directory):
     directory = f'output_070424_k{k}'
     us_cities = load_matrix(os.path.join(directory, 'us_cities.npy'))
 
@@ -98,7 +98,9 @@ if __name__ == '__main__':
     r_1p_noise = load_matrix(os.path.join(directory,'r_1%_noise.npy'))
     r_10p_noise = load_matrix(os.path.join(directory,'r_10%_noise.npy'))
     
-    r_no_noise = homogenous_transformation(r_no_noise, [0,0,3], [0.00,0.00,0])
+    r_no_noise = homogenous_transformation(r_no_noise, [0,0,0], [0.00,0.00,0])
     r_1p_noise = homogenous_transformation(r_1p_noise, [0,0,0], [0.00,0.00,0])
     r_10p_noise = homogenous_transformation(r_10p_noise, [0,0,0], [0.00,0.00,0])
     plot_embeddings(us_cities, r_no_noise, r_1p_noise, r_10p_noise, os.path.join(directory, f'LRE_k{k}.png'), grid=True)
+
+    
